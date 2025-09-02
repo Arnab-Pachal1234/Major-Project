@@ -37,8 +37,22 @@ module.exports.show = async(req,res)=>{
         req.flash("error","Listing You Requested For Does Not Exist");
         res.redirect("/listings");
     }
+    const apiKey = '442b8befaf604d5e8f8561187aa7412a';
+    let location =listing.location;
+   let lat=""
+    let lng=""
+    await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${location}&key=${apiKey}`)
+  .then(response => response.json())
+  .then(data => {
+    console.log(data)
+     lat = data.results[0].geometry.lat;
+    lng = data.results[0].geometry.lng;
+    
+  
+  })
+ 
     console.log(listing);
-    res.render("listings/show.ejs",{listing});
+    res.render("listings/show.ejs",{listing,lat,lng});
 };
 module.exports.create = async(req,res,next)=>{
    let url=req.file.path;
@@ -79,5 +93,20 @@ module.exports.Delet = async(req,res)=>{
     let deletedlist = await Listing.findByIdAndDelete(id);
     req.flash("success","Listing Deleted");
       res.redirect('/listings');
+
+}
+module.exports.search= async(req,res)=>{
+  const title = req.query.title;
+  console.log(title)
+  const allList = await Listing.find({
+    $or: [
+      { title: title },
+      { country: title },
+      { location: title }
+    ]
+  });
+  
+  console.log(allList);
+  res.render("listings/index.ejs",{allListing:allList});
 
 }
